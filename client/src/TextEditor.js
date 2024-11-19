@@ -28,13 +28,36 @@ export default function TextEditor() {
 
     // Establish the Socket.IO connection
     useEffect(() => {
-        const s = io("http://localhost:3001/") // Connect to the server
+        //const s = io("http://localhost:3001/") // Connect to the server
+        //const serverUrl = Math.random() > 0.5 ? "http://localhost:3001" : "http://localhost:3002";
+        const serverUrl = [
+            "http://localhost:3001",
+            "http://localhost:3002",
+            "http://localhost:3003"
+        ][Math.floor(Math.random() * 3)];
+        const s = io(serverUrl);
         setSocket(s) // Save the socket connection in state
         // Cleanup: Disconnect the socket on component unmount
         return () => {
             s.disconnect()
         }
     }, [])
+
+    //To display server info
+    useEffect(() => {
+        if (socket == null) return;
+
+        // Listen for server info
+        socket.on("server-info", ({ serverPort }) => {
+            console.log(`Connected to server on port: ${serverPort}`);
+            alert(`Connected to server on port: ${serverPort}`); // Optional
+        });
+
+        return () => {
+            socket.off("server-info");
+        };
+    }, [socket]);
+
 
     // Load the document when the editor is ready
     useEffect(() => {

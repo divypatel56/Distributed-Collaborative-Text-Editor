@@ -20,13 +20,12 @@ pubClient.on("error", (err) => console.error("Redis Pub Client Error:", err));
 subClient.on("error", (err) => console.error("Redis Sub Client Error:", err));
 
 // Set up Socket.IO server on port 3001 with CORS support
-const io = require("socket.io")(3001, {
+const io = require("socket.io")(3003, {
     cors: {
         origin: "http://localhost:3000", // Allow requests from the client
         methods: ["GET", "POST"], // Allow specific HTTP methods
     },
 })
-
 
 // Default value for new documents
 const defaultValue = ""
@@ -40,13 +39,12 @@ Promise.all([pubClient.connect(), subClient.connect()])
     .catch((err) => console.error("Redis connection failed:", err));
 
 
-
 // Handle Socket.IO connections
 io.on("connection", socket => {
     //console.log("Client connected");
 
     // Send the server's port to the client
-    socket.emit("server-info", { serverPort: 3001 });
+    socket.emit("server-info", { serverPort: 3003 });
     // When a client requests a specific document
     socket.on("get-document", async documentId => {
         // Find or create the requested document in MongoDB
@@ -63,6 +61,7 @@ io.on("connection", socket => {
         socket.on("send-changes", delta => {
             socket.broadcast.to(documentId).emit("receive-changes", delta);
         });
+
 
         // Save document updates sent by the client to MongoDB
         socket.on("save-document", async data => {
