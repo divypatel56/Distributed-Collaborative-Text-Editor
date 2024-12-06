@@ -1,5 +1,14 @@
 const mongoose = require("mongoose")
 const Document = require("./Document")
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+
+const app = express(); // Initialize Express
+// It initializes a web server.
+// Provides API endpoints(e.g., /api/) for HTTP communication.
+// Handles HTTP requests and middleware integration.
+const server = http.createServer(app); // Create HTTP server
 
 // Connect to MongoDB 
 mongoose.connect("mongodb://localhost/google-docs-clone");
@@ -19,14 +28,16 @@ const subClient = pubClient.duplicate();
 pubClient.on("error", (err) => console.error("Redis Pub Client Error:", err));
 subClient.on("error", (err) => console.error("Redis Sub Client Error:", err));
 
-// Set up Socket.IO server on port 3001 with CORS support
-const io = require("socket.io")(3001, {
-    cors: {
-        origin: "http://localhost:3000", // Allow requests from the client
-        methods: ["GET", "POST"], // Allow specific HTTP methods
-    },
-})
+// Get the port from environment variables (default to 3001)
+const PORT = process.env.PORT || 3001;
 
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost", // Allow NGINX to forward requests from any origin
+        methods: ["GET", "POST"],
+    },
+    transports: ["websocket", "polling"], // Support WebSocket and fallback
+});
 
 // Default value for new documents
 const defaultValue = ""
@@ -46,7 +57,7 @@ io.on("connection", socket => {
     //console.log("Client connected");
 
     // Send the server's port to the client
-    socket.emit("server-info", { serverPort: 3001 });
+    socket.emit("server-info", { serverPort: PORT });
     // When a client requests a specific document
     socket.on("get-document", async documentId => {
         // Find or create the requested document in MongoDB
@@ -56,10 +67,6 @@ io.on("connection", socket => {
         socket.emit("load-document", document.data)   // Send the document data to the client
 
         // Broadcast changes made by one client to all other clients in the same room
-        // socket.on("send-changes", delta => {
-        //     socket.broadcast.to(documentId).emit("receive-changes", delta)
-        // })
-
         socket.on("send-changes", delta => {
             socket.broadcast.to(documentId).emit("receive-changes", delta);
         });
@@ -81,3 +88,19 @@ async function findOrCreateDocument(id) {
     return await Document.create({ _id: id, data: defaultValue })
 
 }
+
+// Basic API route for testing
+app.get("/api/", (req, res) => {
+    res.status(200).json({ message: "API is working!" });
+});
+
+app.use((req, res, next) => {
+    res.setHeader("X-Forwarded-By", "NGINX");
+    next();
+});
+
+
+// Start the server
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

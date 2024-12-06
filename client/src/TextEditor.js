@@ -28,14 +28,10 @@ export default function TextEditor() {
 
     // Establish the Socket.IO connection
     useEffect(() => {
-        //const s = io("http://localhost:3001/") // Connect to the server
-        //const serverUrl = Math.random() > 0.5 ? "http://localhost:3001" : "http://localhost:3002";
-        const serverUrl = [
-            "http://localhost:3001",
-            "http://localhost:3002",
-            "http://localhost:3003"
-        ][Math.floor(Math.random() * 3)];
-        const s = io(serverUrl);
+        const s = io("http://localhost", {
+            path: "/socket.io", // Matches the NGINX proxy path
+            transports: ["websocket", "polling"], // Support both WebSocket and fallback
+        });
         setSocket(s) // Save the socket connection in state
         // Cleanup: Disconnect the socket on component unmount
         return () => {
