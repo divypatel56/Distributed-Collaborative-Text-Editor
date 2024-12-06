@@ -49,6 +49,8 @@ Technology Stack Overview
 
 
 UI:
+
+
 ![image](https://github.com/user-attachments/assets/70647feb-0471-423d-a03b-3543eeb42a40)
 
 
