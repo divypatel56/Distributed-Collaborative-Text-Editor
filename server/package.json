@@ -4,6 +4,9 @@
   "main": "index.js",
   "scripts": {
     "devstart": "nodemon server.js",
+    "devstart2": "nodemon server2.js",
+    "devstart3": "nodemon server3.js",
+    "loadbalancer": "nodemon loadbalancer.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,7 +14,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
+    "axios": "^1.7.7",
+    "express": "^4.21.1",
     "mongoose": "^8.8.1",
-    "socket.io": "^4.8.1"
+    "redis": "^4.7.0",
+    "socket.io": "^4.8.1",
+    "socket.io-redis": "^6.1.1"
   }
 }
